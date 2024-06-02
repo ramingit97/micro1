@@ -1,0 +1,195 @@
+version: '3'
+services:
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    depends_on:
+      kafka-0:
+        condition: service_healthy
+      kafka-1:
+        condition: service_healthy
+    networks:
+      - api-gateway-network
+      - kafka_network
+      - user-network
+      - product-network
+      - image-service-network
+    ports:
+      - "3000:3000"
+    volumes:
+    - ./api-gateway:/app
+
+
+
+  user-db:
+    image: postgres
+    restart: always
+    networks:
+      - user-network
+    environment:
+      POSTGRES_DB: userdb
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - user_data:/var/lib/postgresql/data
+  
+  auth-service:
+    build:
+      context: ./auth
+      dockerfile: .Dockerfile
+    restart: always
+    networks:
+      - user-network
+    depends_on:
+      - user-db
+    environment:
+      TYPEORM_HOST: user-db
+      TYPEORM_PORT: 5432
+      TYPEORM_USERNAME: user
+      TYPEORM_PASSWORD: password
+      TYPEORM_DATABASE: userdb 
+    volumes:
+    - ./auth:/app
+
+
+  product-db:
+    image: postgres
+    restart: always
+    networks:
+      - product-network
+    environment:
+      POSTGRES_DB: productdb
+      POSTGRES_USER: productuser
+      POSTGRES_PASSWORD: productpassword
+    # ports:
+    #   - "5438:5432"
+    volumes:
+       - product_data:/var/lib/postgresql/data
+
+
+  product-service:
+    build:
+      context: ./products
+      dockerfile: Dockerfile
+    restart: always
+    networks:
+      - product-network
+      - api-gateway-network
+      - kafka_network
+      - image-service-network
+    depends_on:
+      - product-db
+    environment:
+      TYPEORM_HOST: product-db
+      TYPEORM_PORT: 5432
+      TYPEORM_USERNAME: productuser
+      TYPEORM_PASSWORD: productpassword
+      TYPEORM_DATABASE: productdb
+    # ports:
+    # - "7000:7000"
+    volumes:
+    - ./products:/app
+    - /etc/localtime:/etc/localtime:ro 
+    - /etc/timezone:/etc/timezone:ro
+
+
+
+  order-db:
+    image: postgres
+    restart: always
+    networks:
+      - order-network
+    environment:
+      POSTGRES_DB: orderdb
+      POSTGRES_USER: orderuser
+      POSTGRES_PASSWORD: orderpassword
+    # ports:
+    #   - "5438:5432"
+    volumes:
+       - order_data:/var/lib/postgresql/data
+
+
+  order-service:
+    build:
+      context: ./orders
+      dockerfile: Dockerfile
+    restart: always
+    networks:
+      - order-network
+      - api-gateway-network
+      - kafka_network
+    depends_on:
+      kafka-0:
+        condition: service_healthy
+      kafka-1:
+        condition: service_healthy
+    environment:
+      TYPEORM_HOST: order-db
+      TYPEORM_PORT: 5432
+      TYPEORM_USERNAME: orderuser
+      TYPEORM_PASSWORD: orderpassword
+      TYPEORM_DATABASE: orderdb
+    # ports:
+    # - "7000:7000"
+    volumes:
+    - ./orders:/app
+
+
+  image-service:
+    build:
+      context: ./image_service
+      dockerfile: Dockerfile
+    env_file:
+      - ./image_service/config/dev.env
+    environment:
+      TYPEORM_HOST: postgres
+    networks:
+     - image-service-network
+     - api-gateway-network
+    ports:
+      - "9003:9000"
+    volumes:
+      - ./image_service:/app 
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+
+  minio:
+    image: bitnami/minio:latest
+    ports:
+      - 9000:9000
+      - 9001:9001
+    networks:
+     - image-service-network
+     - api-gateway-network  
+    environment:
+      MINIO_ROOT_USER: username
+      MINIO_ROOT_PASSWORD: password
+      MINIO_DEFAULT_BUCKETS: bucket-test
+    volumes:
+      - data:/bitnami/minio/data    
+      - /etc/localtime:/etc/localtime:ro 
+      - /etc/timezone:/etc/timezone:ro
+
+
+networks:
+  api-gateway-network:
+  kafka_network:
+  user-network:
+  product-network:
+  order-network:
+  image-service-network:
+
+
+volumes:
+  user_data:
+    driver: local
+  product_data:
+    driver: local
+  order_data:
+    driver: local
+  data:
+    driver: local  
+
+

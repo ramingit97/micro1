@@ -1,0 +1,75 @@
+x-kafka-common: &kafka-common
+  image: 'bitnami/kafka:latest'
+  ports:
+    - "9092"
+  networks:
+    - kafka_network
+
+x-kafka-env-common: &kafka-env-common
+  ALLOW_PLAINTEXT_LISTENER: 'yes'
+  KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: 'true'
+  KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 0@kafka-0:9093,1@kafka-1:9093
+  KAFKA_KRAFT_CLUSTER_ID: abcdefghijklmnopqrstuv
+  KAFKA_CFG_PROCESS_ROLES: controller,broker
+  KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+  KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+  EXTRA_ARGS: "-Xms128m -Xmx256m"
+
+services:
+
+  kafka-0:
+    <<: *kafka-common
+    environment:
+      <<: *kafka-env-common
+      KAFKA_CFG_NODE_ID: 0
+    volumes:
+      - kafka_0_data:/bitnami/kafka
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server kafka-0:9092 --list"]
+      interval: 10s
+      timeout: 2s
+      retries: 15
+
+  kafka-1:
+    <<: *kafka-common
+    environment:
+      <<: *kafka-env-common
+      KAFKA_CFG_NODE_ID: 1
+    volumes:
+      - kafka_1_data:/bitnami/kafka
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server kafka-1:9092 --list"]
+      interval: 10s
+      timeout: 2s
+      retries: 15
+
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:latest
+    volumes:
+      - ./config.yml:/etc/kafkaui/dynamic_config.yaml
+    environment:
+      DYNAMIC_CONFIG_ENABLED: 'true'
+    depends_on:
+      - kafka-0
+      - kafka-1
+    networks:
+      - kafka_network
+    ports:
+      - '8080:8080'
+    healthcheck:
+      test: kafka-topics --bootstrap-server broker:9092 --list
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+   
+networks:
+  kafka_network:
+
+
+volumes:
+  kafka_0_data:
+    driver: local
+  kafka_1_data:
+    driver: local

@@ -1,0 +1,5 @@
+export enum ORDER_STATUS {
+    PROGRESS = "PROGRESS",
+    REJECTED = "REJECTED",
+    ACCEPTED = "ACCEPTED"
+}

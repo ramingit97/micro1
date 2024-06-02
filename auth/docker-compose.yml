@@ -1,0 +1,42 @@
+version: '3'
+services:
+
+  post-db:
+    image: postgres
+    restart: always
+    networks:
+      - app-network
+    environment:
+      POSTGRES_DB: postdb
+      POSTGRES_USER: postuser
+      POSTGRES_PASSWORD: postpassword
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  
+  post-service:
+    build:
+      context: .
+      dockerfile: .Dockerfile
+    restart: always
+    networks:
+      - app-network
+    depends_on:
+      - post-db
+    environment:
+      TYPEORM_HOST: post-db
+      TYPEORM_PORT: 5432
+      TYPEORM_USERNAME: postuser
+      TYPEORM_PASSWORD: postpassword
+      TYPEORM_DATABASE: postdb
+    ports:
+      - "3000:3000"  
+    volumes:
+    - ./:/app
+
+
+networks:
+  app-network:
+
+volumes:
+  postgres_data:
+    driver: local
