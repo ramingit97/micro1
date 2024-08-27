@@ -14,9 +14,9 @@ export class ProductsController {
   
   @MessagePattern('product_create')
   @UseInterceptors(TransactionInterceptor)
-  async create(@Payload() product: any) {
+  async create(@Payload() {product}: any) {
     console.log("payload",product);
-    // return await this.productsService.create(product);
+    return await this.productsService.create(product);
   }
 
   @MessagePattern('product_list')

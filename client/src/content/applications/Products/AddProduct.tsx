@@ -147,8 +147,8 @@ const AddProduct: FC<ProductFormProps> = () => {
               </Grid>
             ))}
           </Grid>
-          <Button variant="contained" color="primary" onClick={handleUpload} disabled={!images.length}>
-        Upload
+          <Button color="primary" onClick={handleUpload} disabled={!images.length}>
+        Submit
       </Button>
         </Box>
       </CardContent>

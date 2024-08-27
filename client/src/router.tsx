@@ -43,6 +43,9 @@ const Orders = Loader(
   lazy(() => import('src/content/applications/Orders'))
 );
 
+const ProductsList = Loader(
+  lazy(() => import('src/content/applications/Products/list/ProductsList'))
+);
 const AddProduct = Loader(
   lazy(() => import('src/content/applications/Products/AddProduct'))
 );
@@ -203,6 +206,10 @@ const routes: RouteObject[] = [
       {
         path: 'orders',
         element: <Orders />
+      },
+      {
+        path: 'products',
+        element: <ProductsList />
       },
       {
         path: 'product/add',

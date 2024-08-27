@@ -25,7 +25,7 @@ export class UsersController {
 
     @Post('login')
     async login(@Body() userData, @Res() response: Response){
-        // console.log("userData2",userData);
+        console.log("userData2",userData);
 
         const res = await lastValueFrom(this.authService.send("auth/login",userData));
         

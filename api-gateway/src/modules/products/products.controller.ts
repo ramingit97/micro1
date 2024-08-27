@@ -18,14 +18,21 @@ export class ProductsController {
         product.count = 2000;  
         product.id = uuidv4();
 
-        this.imageService.list(files,{productId:product.id}).then(res=>{
-            console.log('res111111',res);
-        }); 
+
+        console.log('product',product);
+        
+
+        // this.imageService.list(files,{productId:product.id}).then(res=>{
+        //     console.log('res111111',res);
+        // }); 
 
         const res = await lastValueFrom(this.productService.send("product_create",{
             product,
             files
-            }));        
+            }));  
+            
+            console.log('res',res);
+            
         return res;
     }
 

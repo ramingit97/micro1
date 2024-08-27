@@ -36,6 +36,7 @@ export class AuthController {
   @MessagePattern('auth/login')
   @UsePipes(ValidationPipe)
   async login(@Body() user: LoginUserDto) {
+    console.log("user",user);
     const result: IUserToken = await this.authService.login(user);
     // await this.authService.setRefreshCookie(tokens.refresh_token, res)
     return result

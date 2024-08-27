@@ -1,5 +1,6 @@
 import { createApi, fetchBaseQuery, retry } from '@reduxjs/toolkit/query/react'
 import { baseQueryWithReauth } from '../../axios';
+import { IProduct } from 'src/models/IProduct';
 export const productsApi = createApi({
   reducerPath: 'productsApi',
   baseQuery: baseQueryWithReauth,
@@ -30,7 +31,20 @@ export const productsApi = createApi({
       },
       invalidatesTags: ['ORDER'],
     }),
+
+    getProducts: build.query<IProduct[], any>({
+      query() {
+        return {
+          url: 'product/list',
+          credentials: 'include',
+          // params:{
+          // _limit:10
+          // }
+        };
+      },
+      providesTags: ['ORDER']
+    }),
   }),
 })
 
-export const { useCreateProductMutation } = productsApi;
+export const {useGetProductsQuery, useCreateProductMutation } = productsApi;
